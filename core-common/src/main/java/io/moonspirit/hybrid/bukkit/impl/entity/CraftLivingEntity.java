@@ -1,5 +1,6 @@
 package io.moonspirit.hybrid.bukkit.impl.entity;
 
+import io.moonspirit.hybrid.bukkit.impl.CraftPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -52,8 +53,8 @@ public class CraftLivingEntity extends CraftEntity implements org.bukkit.entity.
     @Override public void resetMaxHealth() {}
     @Override public AttributeInstance getAttribute(Attribute attribute) { return null; }
     public void registerAttribute(Attribute attribute) {}
-    @Override public double getAbsorptionAmount() { return 0; }
-    @Override public void setAbsorptionAmount(double amount) {}
+    @Override public double getAbsorptionAmount() { return livingHandle.getAbsorptionAmount(); }
+    @Override public void setAbsorptionAmount(double amount) { livingHandle.setAbsorptionAmount((float) amount); }
 
     @Override public EntityEquipment getEquipment() { return null; }
 
@@ -67,17 +68,44 @@ public class CraftLivingEntity extends CraftEntity implements org.bukkit.entity.
         }
         return result;
     }
-    @Override public boolean addPotionEffect(PotionEffect effect) { return false; }
-    @Override public boolean addPotionEffect(PotionEffect effect, boolean force) { return false; }
-    @Override public boolean addPotionEffects(Collection<PotionEffect> effects) { return false; }
-    @Override public void removePotionEffect(PotionEffectType type) {}
-    @Override public boolean hasPotionEffect(PotionEffectType type) { return false; }
-    @Override public PotionEffect getPotionEffect(PotionEffectType type) { return null; }
+    @Override public boolean addPotionEffect(PotionEffect effect) { return addPotionEffect(effect, false); }
+    @Override public boolean addPotionEffect(PotionEffect effect, boolean force) {
+        if (effect == null) return false;
+        net.minecraft.world.effect.MobEffect nmsEffect = net.minecraft.world.effect.MobEffect.byId(effect.getType().getId());
+        if (nmsEffect == null) return false;
+        livingHandle.addEffect(new MobEffectInstance(nmsEffect, effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles(), effect.hasIcon()));
+        return true;
+    }
+    @Override public boolean addPotionEffects(Collection<PotionEffect> effects) {
+        if (effects == null) return false;
+        for (PotionEffect effect : effects) addPotionEffect(effect);
+        return true;
+    }
+    @Override public void removePotionEffect(PotionEffectType type) {
+        if (type == null) return;
+        net.minecraft.world.effect.MobEffect nmsEffect = net.minecraft.world.effect.MobEffect.byId(type.getId());
+        if (nmsEffect != null) livingHandle.removeEffect(nmsEffect);
+    }
+    @Override public boolean hasPotionEffect(PotionEffectType type) {
+        if (type == null) return false;
+        net.minecraft.world.effect.MobEffect nmsEffect = net.minecraft.world.effect.MobEffect.byId(type.getId());
+        return nmsEffect != null && livingHandle.hasEffect(nmsEffect);
+    }
+    @Override public PotionEffect getPotionEffect(PotionEffectType type) {
+        if (type == null) return null;
+        net.minecraft.world.effect.MobEffect nmsEffect = net.minecraft.world.effect.MobEffect.byId(type.getId());
+        if (nmsEffect == null) return null;
+        MobEffectInstance inst = livingHandle.getEffect(nmsEffect);
+        if (inst == null) return null;
+        return new PotionEffect(type, inst.getDuration(), inst.getAmplifier(), inst.isAmbient(), inst.isVisible());
+    }
 
     @Override public void damage(double amount) { livingHandle.hurt(livingHandle.damageSources().generic(), (float) amount); }
     @Override public void damage(double amount, org.bukkit.entity.Entity source) {
-        if (source instanceof CraftLivingEntity cs) {
-            livingHandle.hurt(livingHandle.damageSources().mobAttack(cs.livingHandle), (float) amount);
+        if (source instanceof CraftLivingEntity ce) {
+            livingHandle.hurt(livingHandle.damageSources().mobAttack(ce.livingHandle), (float) amount);
+        } else if (source instanceof CraftEntity ce && ce.getHandle() instanceof LivingEntity le) {
+            livingHandle.hurt(livingHandle.damageSources().mobAttack(le), (float) amount);
         } else {
             livingHandle.hurt(livingHandle.damageSources().generic(), (float) amount);
         }
@@ -89,7 +117,13 @@ public class CraftLivingEntity extends CraftEntity implements org.bukkit.entity.
     @Override public void setArrowsInBody(int count) {}
     @Override public int getArrowCooldown() { return 0; }
     @Override public void setArrowCooldown(int ticks) {}
-    @Override public Player getKiller() { return null; }
+    @Override public Player getKiller() {
+        net.minecraft.world.entity.LivingEntity killer = livingHandle.getKillCredit();
+        if (killer instanceof net.minecraft.world.entity.player.Player p && p instanceof net.minecraft.server.level.ServerPlayer sp) {
+            return new CraftPlayer(sp);
+        }
+        return null;
+    }
     @Override public Location getEyeLocation() {
         Location loc = getLocation();
         if (loc != null) loc.setY(loc.getY() + getEyeHeight());

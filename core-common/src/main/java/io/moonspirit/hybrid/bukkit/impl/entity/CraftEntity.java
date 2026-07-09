@@ -92,7 +92,10 @@ public class CraftEntity implements org.bukkit.entity.Entity {
     @Override public void setTicksLived(int v) { handle.tickCount = v; }
     @Override public boolean isInsideVehicle() { return handle.isPassenger(); }
     @Override public boolean leaveVehicle() { if (handle.isPassenger()) { handle.stopRiding(); return true; } return false; }
-    @Override public org.bukkit.entity.Entity getVehicle() { return null; }
+    @Override public org.bukkit.entity.Entity getVehicle() {
+        var vehicle = handle.getVehicle();
+        return vehicle != null ? new CraftEntity(vehicle) : null;
+    }
     @Override public void setCustomName(String n) {}
     @Override public String getCustomName() { return null; }
     @Override public void setCustomNameVisible(boolean v) {}

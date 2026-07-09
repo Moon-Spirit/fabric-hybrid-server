@@ -4,9 +4,16 @@ import io.moonspirit.hybrid.bukkit.impl.block.CraftBlockState;
 import io.moonspirit.hybrid.bukkit.impl.block.CraftChest;
 import io.moonspirit.hybrid.bukkit.impl.block.CraftFurnace;
 import io.moonspirit.hybrid.bukkit.impl.block.CraftSign;
+import io.moonspirit.hybrid.bukkit.impl.entity.CraftEntity;
+import io.moonspirit.hybrid.bukkit.impl.entity.CraftLivingEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -322,12 +329,32 @@ public class CraftWorld implements World {
 
     @Override
     public List<Entity> getEntities() {
-        return Collections.emptyList();
+        List<Entity> result = new ArrayList<>();
+        net.minecraft.world.level.entity.EntityTypeTest<net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity> typeTest =
+            net.minecraft.world.level.entity.EntityTypeTest.forClass(net.minecraft.world.entity.Entity.class);
+        net.minecraft.world.phys.AABB aabb = new net.minecraft.world.phys.AABB(
+            Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE,
+            Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        for (net.minecraft.world.entity.Entity entity : handle.getEntities(typeTest, aabb, e -> true)) {
+            result.add(new CraftEntity(entity));
+        }
+        return result;
     }
 
     @Override
     public List<LivingEntity> getLivingEntities() {
-        return Collections.emptyList();
+        List<LivingEntity> result = new ArrayList<>();
+        net.minecraft.world.level.entity.EntityTypeTest<net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity> typeTest =
+            net.minecraft.world.level.entity.EntityTypeTest.forClass(net.minecraft.world.entity.Entity.class);
+        net.minecraft.world.phys.AABB aabb = new net.minecraft.world.phys.AABB(
+            Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE,
+            Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        for (net.minecraft.world.entity.Entity entity : handle.getEntities(typeTest, aabb, e -> true)) {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity) {
+                result.add(new CraftLivingEntity((net.minecraft.world.entity.LivingEntity) entity));
+            }
+        }
+        return result;
     }
 
     @Override

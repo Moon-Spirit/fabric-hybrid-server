@@ -4,6 +4,7 @@ import io.moonspirit.hybrid.bukkit.impl.block.CraftBlockState;
 import io.moonspirit.hybrid.bukkit.impl.block.CraftChest;
 import io.moonspirit.hybrid.bukkit.impl.block.CraftFurnace;
 import io.moonspirit.hybrid.bukkit.impl.block.CraftSign;
+import io.moonspirit.hybrid.bukkit.impl.block.data.CraftBlockData;
 import io.moonspirit.hybrid.mod.server.BukkitRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -127,20 +128,24 @@ public class CraftBlock implements Block {
 
     @Override
     public byte getData() {
-        return 0;
+        net.minecraft.world.level.block.state.BlockState state = getHandle().getBlockState(position);
+        return (byte) net.minecraft.world.level.block.Block.getId(state);
     }
 
     @Override
     public BlockData getBlockData() {
-        return null;
+        return new CraftBlockData(getType());
     }
 
     @Override
     public void setBlockData(BlockData data) {
+        setBlockData(data, true);
     }
 
     @Override
     public void setBlockData(BlockData data, boolean applyPhysics) {
+        if (data == null) return;
+        setType(data.getMaterial(), applyPhysics);
     }
 
     @Override
@@ -158,11 +163,12 @@ public class CraftBlock implements Block {
 
     @Override
     public org.bukkit.block.Biome getBiome() {
-        return org.bukkit.block.Biome.PLAINS;
+        return craftWorld.getBiome(position.getX(), position.getY(), position.getZ());
     }
 
     @Override
     public void setBiome(org.bukkit.block.Biome biome) {
+        craftWorld.setBiome(position.getX(), position.getY(), position.getZ(), biome);
     }
 
     @Override

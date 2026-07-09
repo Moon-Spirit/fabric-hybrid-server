@@ -1,8 +1,12 @@
 package io.moonspirit.hybrid.bukkit.impl;
 
+import io.moonspirit.hybrid.bukkit.impl.entity.CraftEntity;
 import io.moonspirit.hybrid.bridge.core.world.level.LevelChunkBridge;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
@@ -69,7 +73,27 @@ public class CraftChunk implements Chunk {
 
     @Override
     public Entity[] getEntities() {
-        return new Entity[0];
+        ServerLevel level = craftWorld.getHandle();
+        java.util.List<net.minecraft.world.entity.Entity> chunkEntities = new java.util.ArrayList<>();
+        int cx = getX();
+        int cz = getZ();
+        net.minecraft.world.level.entity.EntityTypeTest<net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity> typeTest =
+            net.minecraft.world.level.entity.EntityTypeTest.forClass(net.minecraft.world.entity.Entity.class);
+        net.minecraft.world.phys.AABB aabb = new net.minecraft.world.phys.AABB(
+            Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE,
+            Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        for (net.minecraft.world.entity.Entity entity : level.getEntities(typeTest, aabb, e -> true)) {
+            int ex = ((int) Math.floor(entity.getX())) >> 4;
+            int ez = ((int) Math.floor(entity.getZ())) >> 4;
+            if (ex == cx && ez == cz) {
+                chunkEntities.add(entity);
+            }
+        }
+        Entity[] result = new Entity[chunkEntities.size()];
+        for (int i = 0; i < chunkEntities.size(); i++) {
+            result[i] = new CraftEntity(chunkEntities.get(i));
+        }
+        return result;
     }
 
     @Override
@@ -100,12 +124,12 @@ public class CraftChunk implements Chunk {
 
     @Override
     public boolean unload(boolean save) {
-        return false;
+        return false; // TODO: implement chunk unloading via ticket system
     }
 
     @Override
     public boolean unload() {
-        return false;
+        return unload(true);
     }
 
     @Override

@@ -24,15 +24,20 @@ shadowJar {
     exclude 'META-INF/*.RSA'
 }
 
-task fabricJar(type: Copy) {
-    dependsOn shadowJar
-    from shadowJar.archiveFile
-    into "${rootProject.buildDir}/distributions"
-}
-
 // 确保只打包 core-fabric 的运行时依赖
 configurations {
     runtimeClasspath {
         exclude group: 'net.fabricmc', module: 'fabric-loader'
     }
 }
+
+// 注意: fabric-loader 需要在运行时从外部提供
+// 运行方式: java -cp fabric-hybrid-server-1.0.0.jar:<fabric-loader-jar>:<minecraft-server-jar> io.moonspirit.hybrid.bootstrap.HybridBootstrap nogui
+
+task fabricJar(type: Copy) {
+    dependsOn shadowJar
+    from shadowJar.archiveFile
+    into "${rootProject.buildDir}/distributions"
+}
+
+

@@ -1,0 +1,13 @@
+accessWidener v2 named
+
+# 开放 MinecraftServer 私有成员
+accessible class net/minecraft/server/MinecraftServer
+accessible method net/minecraft/server/MinecraftServer tickServer (Ljava/util/function/BooleanSupplier;)V
+
+# 开放 PlayerList 私有成员
+accessible class net/minecraft/server/players/PlayerList
+
+# 开放 ServerLevel 私有成员
+accessible class net/minecraft/server/level/ServerLevel
+accessible method net/minecraft/server/level/ServerLevel tick (Ljava/util/function/BooleanSupplier;)V
+

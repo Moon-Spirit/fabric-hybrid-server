@@ -1,0 +1,35 @@
+plugins {
+    id 'fabric-loom' version '1.7.4' apply false
+    id 'java-library'
+}
+
+allprojects {
+    apply plugin: 'java-library'
+    group = 'io.moonspirit'
+    version = '1.0.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://maven.fabricmc.net/' }
+        maven { url 'https://repo.papermc.io/repository/maven-public/' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    }
+}
+
+subprojects {
+    apply plugin: 'fabric-loom'
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        mappings loom.officialMojangMappings()
+        modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+    }
+
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(17)
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 17
+    }
+}

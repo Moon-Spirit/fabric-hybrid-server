@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "io.moonspirit.hybrid.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "core.server.MinecraftServerMixin",
+    "core.server.DedicatedServerMixin",
+    "core.server.PlayerListMixin",
+    "core.world.ServerLevelMixin",
+    "core.entity.ServerPlayerMixin",
+    "core.server.ServerPlayerGameModeMixin",
+    "core.entity.LivingEntityMixin",
+    "core.server.ServerGamePacketListenerImplMixin",
+    "core.server.ServerStatusPingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
